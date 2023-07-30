@@ -105,6 +105,11 @@ function createHTML(options = {}) {
             return document.querySelectorAll(command);
         }
 
+        function isTextSelected() {
+            var selection = window.getSelection();
+            return selection && selection.type === 'Range';
+        }
+
         function exec(command) {
             var value = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
             return document.execCommand(command, false, value);
@@ -333,7 +338,32 @@ function createHTML(options = {}) {
             justifyLeft: { state: function() { return queryCommandState('justifyLeft'); }, result: function() { return exec('justifyLeft'); }},
             justifyRight: { state: function() { return queryCommandState('justifyRight'); }, result: function() { return exec('justifyRight'); }},
             justifyFull: { state: function() { return queryCommandState('justifyFull'); }, result: function() { return exec('justifyFull'); }},
-            hiliteColor: {  state: function() { return queryCommandValue('backColor'); }, result: function(color) { return exec('backColor', color); }},
+            hiliteColor: {  state: function() { return queryCommandValue('hiliteColor'); }, result: function(color) { 
+                console.log('hiliteColor', color)
+                let sel = isTextSelected();
+
+                if (!sel) {
+                    if (color === 'transparent') {
+                        let node = window.getSelection().anchorNode;
+                    
+                        let parent = node.parentNode;
+                        let parentParent = parent.parentNode;
+                        let span = createElement('span');
+                        span.style.backgroundColor = color;
+                        span.innerHTML = '&nbsp;';
+                        parentParent.appendChild(span);
+                        let sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.setPosition(span, 0);
+                        return;
+                    } else {
+                        return exec('hiliteColor', color);
+                    }
+                }
+
+                return exec('hiliteColor', color);
+                 
+            }},
             foreColor: { state: function() { return queryCommandValue('foreColor'); }, result: function(color) { return exec('foreColor', color); }},
             fontSize: { state: function() { return queryCommandValue('fontSize'); }, result: function(size) { return exec('fontSize', size); }},
             fontName: { result: function(name) { return exec('fontName', name); }},
